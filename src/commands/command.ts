@@ -12,7 +12,7 @@ export interface Command {
   names: string[];
   cooldown?: RateLimiter;
   deferType: CommandDeferType;
-  requiredClientPerms: PermissionsString[];
+  requireClientPerms: PermissionsString[];
 
   autocomplete?(
     intr: AutocompleteInteraction,
