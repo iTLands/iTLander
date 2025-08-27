@@ -49,7 +49,7 @@ export class Lang {
     location: string,
     variables?: { [name: string]: string },
   ): LocalizationMap {
-    let obj = {};
+    let obj: LocalizationMap = {};
     for (let langCode of Language.Enabled) {
       obj[langCode] = this.getRef(location, langCode, variables);
     }

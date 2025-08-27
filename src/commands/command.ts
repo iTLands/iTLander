@@ -18,6 +18,7 @@ export interface Command {
     intr: AutocompleteInteraction,
     option: AutocompleteFocusedOption,
   ): Promise<ApplicationCommandOptionChoiceData[]>;
+  execute(intr: CommandInteraction, data: EventData): Promise<void>;
 }
 
 export enum CommandDeferType {
