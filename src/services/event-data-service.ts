@@ -8,6 +8,7 @@ import {
 } from "discord.js";
 
 import { EventData } from "../models/internal-models.js";
+import { Language } from "../models/enum-helpers/language.js";
 
 export class EventDataService {
   public async create(
@@ -21,8 +22,16 @@ export class EventDataService {
       >;
     } = {},
   ): Promise<EventData> {
-    const lang = options.guild?.preferredLocale ?? Locale.SpanishLATAM;
-    const langGuild = options.guild?.preferredLocale ?? Locale.SpanishLATAM;
+    const lang =
+      options.guild?.preferredLocale &&
+      Language.Enabled.includes(options.guild.preferredLocale)
+        ? options.guild.preferredLocale
+        : Language.Default;
+    const langGuild =
+      options.guild?.preferredLocale &&
+      Language.Enabled.includes(options.guild.preferredLocale)
+        ? options.guild.preferredLocale
+        : Language.Default;
 
     return new EventData(
       lang,
