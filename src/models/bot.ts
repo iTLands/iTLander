@@ -38,6 +38,11 @@ export class Bot {
 
   private registerListeners(): void {
     this.client.on(Events.ClientReady, () => this.onReady());
+
+    // Add this listener for handling slash commands
+    this.client.on(Events.InteractionCreate, (intr: Interaction) =>
+      this.onInteraction(intr),
+    );
   }
 
   private async login(token: string): Promise<void> {
@@ -48,11 +53,19 @@ export class Bot {
       return;
     }
   }
+
   private async onReady(): Promise<void> {
     let userTag = this.client.user?.tag;
     Logger.info(`Bot Initialize as ${userTag}`);
 
     this.ready = true;
     Logger.info("Client Ready");
+  }
+
+  // Add this new method to handle interactions
+  private async onInteraction(intr: Interaction): Promise<void> {
+    if (intr.isCommand() || intr.isAutocomplete()) {
+      await this.commandHandler.process(intr);
+    }
   }
 }

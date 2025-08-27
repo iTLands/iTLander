@@ -1,3 +1,4 @@
+import { REST } from "@discordjs/rest";
 import { Options, Partials } from "discord.js";
 import { createRequire } from "node:module";
 import "reflect-metadata";
@@ -16,11 +17,18 @@ import { CommandHandler } from "./events/command-handler.js";
 // Import services
 import { EventDataService } from "./services/event-data-service.js";
 import { Logger } from "./services/logger.js";
+import { CommandRegistrationService } from "./services/command-registration-service.js";
+import {
+  ChatCommandMetadata,
+  MessageCommandMetadata,
+  UserCommandMetadata,
+} from "./commands/metadata.js";
 
 // Import jobs
 
 const require = createRequire(import.meta.url);
-const Config = require("../config/config.json");
+let Config = require("../config/config.json");
+let Logs = require("../lang/logs.json");
 
 async function start(): Promise<void> {
   Logger.info("Starting bot...");
@@ -51,6 +59,30 @@ async function start(): Promise<void> {
   // Create and start bot
   const bot = new Bot(Config.client.token, client, commandHandler);
 
+  // Register
+  if (process.argv[2] == "commands") {
+    try {
+      let rest = new REST({ version: "10" }).setToken(Config.client.token);
+      let commandRegistrationService = new CommandRegistrationService(rest);
+      let localCmds = [
+        ...Object.values(ChatCommandMetadata).sort((a, b) =>
+          a.name > b.name ? 1 : -1,
+        ),
+        ...Object.values(MessageCommandMetadata).sort((a, b) =>
+          a.name > b.name ? 1 : -1,
+        ),
+        ...Object.values(UserCommandMetadata).sort((a, b) =>
+          a.name > b.name ? 1 : -1,
+        ),
+      ];
+      await commandRegistrationService.process(localCmds, process.argv);
+    } catch (error) {
+      Logger.error(Logs.error.commandAction, error);
+    }
+    // Wait for any final logs to be written.
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    process.exit();
+  }
   await bot.start();
 }
 
