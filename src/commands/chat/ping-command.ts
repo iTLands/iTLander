@@ -1,4 +1,10 @@
-import { ChatInputCommandInteraction, PermissionsString } from "discord.js";
+import {
+  ApplicationCommandType,
+  ChatInputCommandInteraction,
+  InteractionContextType,
+  PermissionsString,
+  RESTPostAPIChatInputApplicationCommandsJSONBody,
+} from "discord.js";
 import { RateLimiter } from "discord.js-rate-limiter";
 import { Command, CommandDeferType } from "../index.js";
 import { EventData } from "../../models/internal-models.js";
@@ -9,6 +15,14 @@ export class PingCommand implements Command {
   public cooldown = new RateLimiter(1, 5000);
   public deferType = CommandDeferType.HIDDEN;
   public requireClientPerms: PermissionsString[] = [];
+
+  //  public static metadata: RESTPostAPIChatInputApplicationCommandsJSONBody = {
+  //    type: ApplicationCommandType.ChatInput,
+  //    name: "ping",
+  //    description: "Check the bot's ping and latency",
+  //    contexts: [InteractionContextType.Guild, InteractionContextType.BotDM],
+  //    default_member_permissions: undefined,
+  //  };
 
   public async execute(
     intr: ChatInputCommandInteraction,

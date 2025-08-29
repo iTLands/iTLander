@@ -3,6 +3,7 @@ import {
   GuildChannel,
   MessageComponentInteraction,
   ModalSubmitInteraction,
+  RESTPostAPIApplicationCommandsJSONBody,
   ThreadChannel,
 } from "discord.js";
 
@@ -86,5 +87,17 @@ export class CommandUtils {
     }
 
     return true;
+  }
+
+  public static extractAllCommandMetadata(
+    commands: Command[],
+  ): RESTPostAPIApplicationCommandsJSONBody[] {
+    return commands
+      .map((cmd) => {
+        const commandClass = cmd.constructor as any;
+        return commandClass.metadata;
+      })
+      .filter(Boolean)
+      .sort((a, b) => (a.name > b.name ? 1 : -1));
   }
 }

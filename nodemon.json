@@ -1,6 +1,7 @@
 {
   "watch": ["src"],
-  "ignore": ["dist"],
-  "ext": "ts",
-  "exec": "ts-node src/index.ts"
+  "ignore": ["dist", "node_modules"],
+  "ext": "ts,json",
+  "exec": "node --loader ts-node/esm -r tsconfig-paths/register src/start-bot.ts"
+  
 }

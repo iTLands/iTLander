@@ -8,7 +8,7 @@ import { Bot } from "./models/bot.js";
 import { Command } from "./commands/command.js";
 
 // Import your commands
-import { PingCommand } from "./commands/chat/index.js";
+import { PingCommand, VerificationCommand } from "./commands/chat/index.js";
 // Import more commands here...
 
 // Import handlers
@@ -23,6 +23,17 @@ import {
   MessageCommandMetadata,
   UserCommandMetadata,
 } from "./commands/metadata.js";
+import { VerificationService } from "./services/verification-service.js";
+import {
+  VerificationApproveButton,
+  VerificationRejectButton,
+} from "./buttons/verification-buttons.js";
+import { Button } from "./buttons/index.js";
+import { VerificationMemberJoinHandler } from "./events/verification-member-join-handler.js";
+import { ButtonHandler } from "./events/button-handler.js";
+import { MessageHandler } from "./events/message-handler.js";
+import { TriggerHandler } from "./events/trigger-handler.js";
+import { Trigger } from "./triggers/trigger.js";
 
 // Import jobs
 
@@ -43,18 +54,37 @@ async function start(): Promise<void> {
 
   // Services
   const eventDataService = new EventDataService();
+  const verificationService = new VerificationService();
 
   // Commands
   const commands: Command[] = [
     new PingCommand(),
+    new VerificationCommand(verificationService),
     // Add more commands here...
   ];
+
+  // Buttons
+  let buttons: Button[] = [
+    new VerificationApproveButton(verificationService),
+    new VerificationRejectButton(verificationService),
+  ];
+
+  // Triggers
+  let triggers: Trigger[] = [];
 
   // Jobs
 
   // Event handlers
-
+  const verificationMemberJoinHandler = new VerificationMemberJoinHandler(
+    verificationService,
+  );
   const commandHandler = new CommandHandler(commands, eventDataService);
+  const buttonHandler = new ButtonHandler(buttons, eventDataService);
+  const verificationMessageHandler = new VerificationMemberJoinHandler(
+    verificationService,
+  );
+  const triggerHandler = new TriggerHandler(triggers, eventDataService);
+  const messageHandler = new MessageHandler(triggerHandler);
 
   // Create and start bot
   const bot = new Bot(Config.client.token, client, commandHandler);
@@ -75,6 +105,9 @@ async function start(): Promise<void> {
           a.name > b.name ? 1 : -1,
         ),
       ];
+
+      // let localCmds = CommandUtils.extractAllCommandMetadata(commands);
+
       await commandRegistrationService.process(localCmds, process.argv);
     } catch (error) {
       Logger.error(Logs.error.commandAction, error);

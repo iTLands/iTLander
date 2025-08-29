@@ -1,21 +1,27 @@
 {
   "compilerOptions": {
     "target": "es2022",
-    "module": "nodenext",
+    "module": "NodeNext",
     "lib": ["es2022"],
     "declaration": true,
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": false,
-    "moduleResolution": "nodenext",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": "./"
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+     }
   },
-  "exclude": ["dist", "node_modules", "tests", "index.bak.ts"]
+  "exclude": ["dist", "node_modules", "tests", "index.bak.ts"],
+  "ts-node": {
+		"require": ["tsconfig-paths/register"]
+	}
 }
 
