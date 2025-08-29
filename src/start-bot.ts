@@ -34,6 +34,7 @@ import { ButtonHandler } from "./events/button-handler.js";
 import { MessageHandler } from "./events/message-handler.js";
 import { TriggerHandler } from "./events/trigger-handler.js";
 import { Trigger } from "./triggers/trigger.js";
+import { VerificationMessageHandler } from "./events/verification-message-handler.js";
 
 // Import jobs
 
@@ -75,19 +76,43 @@ async function start(): Promise<void> {
   // Jobs
 
   // Event handlers
+  const commandHandler = new CommandHandler(commands, eventDataService);
+  const buttonHandler = new ButtonHandler(buttons, eventDataService);
+  const triggerHandler = new TriggerHandler(triggers, eventDataService);
+
+  // Verification handlers
   const verificationMemberJoinHandler = new VerificationMemberJoinHandler(
     verificationService,
   );
-  const commandHandler = new CommandHandler(commands, eventDataService);
-  const buttonHandler = new ButtonHandler(buttons, eventDataService);
-  const verificationMessageHandler = new VerificationMemberJoinHandler(
+  const verificationMessageHandler = new VerificationMessageHandler(
     verificationService,
+    client,
   );
-  const triggerHandler = new TriggerHandler(triggers, eventDataService);
+
+  // Create custom message handler that includes verification logic
   const messageHandler = new MessageHandler(triggerHandler);
 
+  // Override the message handler process method to include verification handling
+  const originalProcess = messageHandler.process.bind(messageHandler);
+  messageHandler.process = async (msg) => {
+    // First process verification messages (DMs with attachments)
+    if (!msg.guild && msg.attachments.size > 0) {
+      await verificationMessageHandler.process(msg);
+    }
+
+    // Then process normal message triggers
+    await originalProcess(msg);
+  };
+
   // Create and start bot
-  const bot = new Bot(Config.client.token, client, commandHandler);
+  const bot = new Bot(
+    Config.client.token,
+    client,
+    commandHandler,
+    buttonHandler,
+    messageHandler,
+    verificationMemberJoinHandler,
+  );
 
   // Register
   if (process.argv[2] == "commands") {

@@ -5,6 +5,7 @@ import {
   CommandInteraction,
   Events,
   Guild,
+  GuildMember,
   Interaction,
   Message,
   MessageReaction,
@@ -16,8 +17,14 @@ import {
 } from "discord.js";
 import { createRequire } from "node:module";
 
-import { CommandHandler } from "../events/index.js";
+import {
+  ButtonHandler,
+  CommandHandler,
+  MessageHandler,
+  VerificationMemberJoinHandler,
+} from "../events/index.js";
 import { Logger } from "../services/index.js";
+import { PartialUtils } from "../utils/partial-utils.js";
 
 const require = createRequire(import.meta.url);
 let Config = require("../../config/config.json");
@@ -29,6 +36,9 @@ export class Bot {
     private token: string,
     private client: Client,
     private commandHandler: CommandHandler,
+    private buttonHandler?: ButtonHandler,
+    private messageHandler?: MessageHandler,
+    private verificationMemberJoinHandler?: VerificationMemberJoinHandler,
   ) {}
 
   public async start(): Promise<void> {
@@ -42,6 +52,11 @@ export class Bot {
     this.client.on(Events.InteractionCreate, (intr: Interaction) =>
       this.onInteraction(intr),
     );
+    if (this.verificationMemberJoinHandler) {
+      this.client.on(Events.GuildMemberAdd, (member: GuildMember) =>
+        this.onGuildMemberAdd(member),
+      );
+    }
   }
 
   private async login(token: string): Promise<void> {
@@ -61,7 +76,24 @@ export class Bot {
     Logger.info("Client Ready");
   }
 
-  private async onMessage(message: Message): Promise<void> {}
+  private async onMessage(msg: Message): Promise<void> {
+    try {
+      msg = await PartialUtils.fillMessage(msg);
+      if (!msg) {
+        return;
+      }
+
+      await this.messageHandler.process(msg);
+    } catch (error) {
+      Logger.error("Something went wrong with message handler", error);
+    }
+  }
+
+  private async onGuildMemberAdd(member: GuildMember): Promise<void> {
+    if (this.verificationMemberJoinHandler) {
+      await this.verificationMemberJoinHandler.process(member);
+    }
+  }
 
   // Add this new method to handle interactions
   private async onInteraction(intr: Interaction): Promise<void> {

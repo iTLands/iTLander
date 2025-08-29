@@ -5,6 +5,9 @@ import {
   ButtonBuilder,
   ButtonStyle,
   TextChannel,
+  Client,
+  Guild,
+  GuildMember,
 } from "discord.js";
 import { EventHandler } from "./index.js";
 import { VerificationService } from "../services/verification-service.js";
@@ -12,7 +15,10 @@ import { MessageUtils } from "../utils/index.js";
 import { Logger } from "../services/index.js";
 
 export class VerificationMessageHandler implements EventHandler {
-  constructor(private verificationService: VerificationService) {}
+  constructor(
+    private verificationService: VerificationService,
+    private client: Client,
+  ) {}
 
   public async process(msg: Message): Promise<void> {
     // Only process DMs with attachments
@@ -60,16 +66,43 @@ export class VerificationMessageHandler implements EventHandler {
     }
   }
 
-  private async getGuildsWithVerification(userId: string): Promise<any[]> {
-    // Implementation to find guilds where user needs verification
-    // This would need to be implemented based on how you track guild memberships
-    return [];
+  private async getGuildsWithVerification(userId: string): Promise<Guild[]> {
+    const guildsWithVerification: Guild[] = [];
+
+    try {
+      // Get all guilds the bot is in
+      const botGuilds = this.client.guilds.cache;
+
+      for (const [guildId, guild] of botGuilds) {
+        // Check if guild has verification enabled
+        const config = this.verificationService.getGuildConfig(guildId);
+        if (!config || !config.enabled) continue;
+
+        try {
+          // Check if user is in this guild
+          const member = await guild.members.fetch(userId);
+          if (member) {
+            // Check if user doesn't already have the verified role
+            if (!member.roles.cache.has(config.verifiedRoleId)) {
+              guildsWithVerification.push(guild);
+            }
+          }
+        } catch (error) {
+          // User not in guild or can't fetch - skip
+          continue;
+        }
+      }
+    } catch (error) {
+      Logger.error("Error getting guilds with verification", error);
+    }
+
+    return guildsWithVerification;
   }
 
   private async processVerificationForGuild(
     msg: Message,
     attachment: any,
-    guild: any,
+    guild: Guild,
   ): Promise<void> {
     const config = this.verificationService.getGuildConfig(guild.id);
     if (!config) return;
@@ -92,7 +125,7 @@ export class VerificationMessageHandler implements EventHandler {
       .setColor(0x00ff00)
       .setTitle("✅ Verification Submitted")
       .setDescription(
-        "Your student ID has been received and will be reviewed by an administrator.",
+        `Your student ID has been received for **${guild.name}** and will be reviewed by an administrator.`,
       )
       .addFields({
         name: "⏰ Review Time:",
@@ -104,15 +137,15 @@ export class VerificationMessageHandler implements EventHandler {
     await MessageUtils.reply(msg, confirmEmbed);
 
     // Send to verification channel
-    await this.sendToVerificationChannel(verification, config);
+    await this.sendToVerificationChannel(verification, config, guild);
   }
 
   private async sendToVerificationChannel(
     verification: any,
     config: any,
+    guild: Guild,
   ): Promise<void> {
     try {
-      const guild = await this.getBotClient().guilds.fetch(config.guildId);
       const channel = guild.channels.cache.get(
         config.verificationChannelId,
       ) as TextChannel;
@@ -134,7 +167,7 @@ export class VerificationMessageHandler implements EventHandler {
         .setFooter({
           text: "Review the image and use buttons to approve/reject",
         })
-        .setTimestamp(verification.timestamp);
+        .setTimestamp(verification.timeStamp);
 
       const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
@@ -147,20 +180,23 @@ export class VerificationMessageHandler implements EventHandler {
           .setStyle(ButtonStyle.Danger),
       );
 
-      await channel.send({
+      const sentMessage = await channel.send({
         embeds: [verificationEmbed],
         components: [actionRow],
       });
 
-      Logger.info(`Verification request sent for ${verification.username}`);
+      // Store message ID for potential cleanup
+      verification.messageId = sentMessage.id;
+      this.verificationService.setPendingVerification(
+        verification.userId,
+        verification,
+      );
+
+      Logger.info(
+        `Verification request sent for ${verification.username} in ${guild.name}`,
+      );
     } catch (error) {
       Logger.error("Error sending verification to channel", error);
     }
-  }
-
-  private getBotClient(): any {
-    // This would need to be implemented to get the Discord client instance
-    // You might need to pass this through the constructor or use a singleton
-    throw new Error("getBotClient not implemented");
   }
 }
