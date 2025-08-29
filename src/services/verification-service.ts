@@ -66,7 +66,7 @@ export class VerificationService {
           .setDescription(
             "Your carnet verification has been approved. Welcome to iTLand!",
           )
-          .setFooter({ text: `Approved by ${approvedBy.tag}` })
+          .setFooter({ text: `Approved by ${approvedBy.username}` })
           .setTimestamp();
 
         await user.send({ embeds: [approvedEmed] });
@@ -74,7 +74,7 @@ export class VerificationService {
         Logger.warn("Could not send approval DM to user", error);
       }
       Logger.info(
-        `Verification approved for ${verification.username} by ${approvedBy.tag}`,
+        `Verification approved for ${verification.username} by ${approvedBy.username}`,
       );
       return true;
     } catch (error) {
@@ -116,7 +116,7 @@ export class VerificationService {
               value: "You can submit a new, clearer photo of your student ID.",
             },
           )
-          .setFooter({ text: `Reviewed by ${rejectedBy.tag}` })
+          .setFooter({ text: `Reviewed by ${rejectedBy.username}` })
           .setTimestamp();
 
         await user.send({ embeds: [rejectedEmbed] });
@@ -125,7 +125,7 @@ export class VerificationService {
       }
 
       Logger.info(
-        `Verification rejected for ${verification.username} by ${rejectedBy.tag}`,
+        `Verification rejected for ${verification.username} by ${rejectedBy.username}`,
       );
       return true;
     } catch (error) {

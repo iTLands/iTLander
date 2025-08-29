@@ -90,7 +90,7 @@ export class VerificationApproveButton implements Button {
           {
             color: 0x00ff00,
             title: "✅ Verification Approved",
-            description: `**User:** ${verification.username}\n**ID:** ${verification.userId}\n**Approved by:** ${intr.user.tag}`,
+            description: `**User:** ${verification.username}\n**ID:** ${verification.userId}\n**Approved by:** ${intr.user.username}`,
             timestamp: new Date().toISOString(),
             footer: {
               text: "User has been granted access to the server",
@@ -195,12 +195,13 @@ export class VerificationRejectButton implements Button {
     );
 
     if (success) {
+      this.verificationService.removePendingVerification(userId);
       await intr.update({
         embeds: [
           {
             color: 0xff0000,
             title: "❌ Verification Rejected",
-            description: `**User:** ${verification.username}\n**ID:** ${verification.userId}\n**Rejected by:** ${intr.user.tag}`,
+            description: `**User:** ${verification.username}\n**ID:** ${verification.userId}\n**Rejected by:** ${intr.user.username}`,
             timestamp: new Date().toISOString(),
             footer: {
               text: "User has been notified and can submit a new request",

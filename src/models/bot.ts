@@ -99,6 +99,8 @@ export class Bot {
   private async onInteraction(intr: Interaction): Promise<void> {
     if (intr.isCommand() || intr.isAutocomplete()) {
       await this.commandHandler.process(intr);
+    } else if (intr.isButton()) {
+      await this.buttonHandler?.process(intr);
     }
   }
 }
