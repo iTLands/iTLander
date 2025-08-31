@@ -1,0 +1,41 @@
+{
+  "name": "itlander",
+  "version": "1.0.0",
+  "description": "",
+  "type": "commonjs",
+  "main": "start-bot.js",
+  "scripts": {
+    "start": "npm run start:bot",
+    "start:bot": "npm run build && node --enable-source-maps dist/start-bot.js",
+    "build": "tsup src/start-bot.ts --format esm,cjs --dts --clean --sourcemap",
+    "dev": "nodemon src/start-bot.ts",
+    "test": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iTLands/iTLander.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iTLands/iTLander/issues"
+  },
+  "homepage": "https://github.com/iTLands/iTLander#readme",
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "discord.js": "^14.22.1",
+    "dotenv": "^17.2.1",
+    "node-fetch": "^3.3.2",
+    "pino": "^9.9.0",
+    "pino-pretty": "^13.1.1"
+  }
+}
