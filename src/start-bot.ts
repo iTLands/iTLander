@@ -22,7 +22,7 @@ async function start(): Promise<void> {
   await bot.start();
 
   if (Config.database.enabled) {
-    const db = DatabaseFactory.type();
+    const db = DatabaseFactory.type(Config.database.type || "json");
     db.init();
   }
 }
