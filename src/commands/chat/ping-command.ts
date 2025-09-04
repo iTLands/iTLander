@@ -1,7 +1,6 @@
 import {
   ChatInputCommandInteraction,
   Colors,
-  CommandInteraction,
   EmbedBuilder,
   PermissionsString,
 } from "discord.js";
