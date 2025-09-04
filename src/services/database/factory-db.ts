@@ -1,24 +1,20 @@
 import { Config } from "../../config";
-import { ROOT_DIR } from "../../constants";
+import { IDatabase } from "./interfaces";
 import { JsonDatabase } from "./json-db";
 
 export class DatabaseFactory {
-  public static type(provider?: string) {
-    if (!provider) {
-      provider = Config.database.type;
+  private static registry: Record<string, () => IDatabase> = {
+    json: () => new JsonDatabase(),
+    //TODO: implement instance of MySQL or any other provider :)
+  };
+
+  public static create(type?: string): IDatabase {
+    if (!type) {
+      type = Config.database.type;
     }
 
-    switch (provider) {
-      case "json":
-        return this.jsonDbProvider();
-      default:
-        throw new Error(`Unsupported provider: ${provider}`);
-    }
+    const create = this.registry[type];
+    if (!create) throw new Error(`Unsupported provider: ${type}`);
+    return create();
   }
-
-  private static jsonDbProvider(): JsonDatabase {
-    return new JsonDatabase(Config.database.jsonPath || `${ROOT_DIR}/data`);
-  }
-
-  //TODO: implement intance of MySQL or any other provider :)
 }
