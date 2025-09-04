@@ -11,7 +11,13 @@ import {
 import { DatabaseFactory } from "./services/database/factory-db";
 import { PingCommand } from "./commands/chat";
 import { ChatCommandMetadata } from "./commands";
-import { CommandHandler } from "./events";
+import {
+  CommandHandler,
+  MessageHandler,
+  TriggerHandler,
+  VerificationMemberJoinHandler,
+} from "./events";
+import { Trigger } from "./triggers";
 
 async function start(): Promise<void> {
   let eventDataService = new EventDataService();
@@ -29,14 +35,21 @@ async function start(): Promise<void> {
 
   let commands: Command[] = [new PingCommand()];
 
+  let trigger: Trigger[] = [];
+
   // Events
   const commandHandler = new CommandHandler(commands, eventDataService);
+  const verificationMemberJoinHanlder = new VerificationMemberJoinHandler();
+  const triggerHandler = new TriggerHandler(trigger, eventDataService);
+  const messageHandler = new MessageHandler(triggerHandler);
 
   const bot = new Bot(
     Config.discord.token!,
     client,
     Config.discord.guildId!,
     commandHandler,
+    verificationMemberJoinHanlder,
+    messageHandler,
   );
 
   // Register
