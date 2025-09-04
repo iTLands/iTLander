@@ -1,10 +1,17 @@
-import { ActivityType, Client, Events } from "discord.js";
+import {
+  ActivityType,
+  AutocompleteInteraction,
+  Client,
+  CommandInteraction,
+  Events,
+  Interaction,
+} from "discord.js";
 import { Logger } from "../services/index";
-import { createRequire } from "node:module";
 import path from "path";
 import fs from "fs";
 import { ROOT_DIR } from "../constants";
 import { CustomClient } from "../extensions/custom-client";
+import { CommandHandler } from "../events";
 
 const logsPath = path.join(ROOT_DIR, "lang", "logs.json");
 const Logs = JSON.parse(fs.readFileSync(logsPath, "utf-8"));
@@ -16,6 +23,7 @@ export class Bot {
     private token: string,
     private client: CustomClient,
     private guildId: string,
+    private commandHandler: CommandHandler,
   ) {}
 
   public async start(): Promise<void> {
@@ -25,6 +33,9 @@ export class Bot {
 
   private registerListener(): void {
     this.client.once(Events.ClientReady, () => this.onReady());
+    this.client.on(Events.InteractionCreate, (intr: Interaction) => {
+      this.onInteraction(intr);
+    });
   }
 
   private async login(token: string): Promise<void> {
@@ -32,6 +43,29 @@ export class Bot {
       await this.client.login(token);
     } catch (error) {
       Logger.error(Logs.error.clientLogin, error);
+    }
+  }
+
+  private async onInteraction(intr: Interaction): Promise<void> {
+    if (!this.isReady) {
+      return;
+    }
+
+    if (
+      intr instanceof CommandInteraction ||
+      intr instanceof AutocompleteInteraction
+    ) {
+      try {
+        await this.commandHandler.process(intr);
+      } catch (error) {
+        Logger.error(Logs.error.command, error);
+      }
+    } else {
+      try {
+        //TODO: Add button interaction handler
+      } catch (error) {
+        Logger.error(Logs.error.button, error);
+      }
     }
   }
 

@@ -14,7 +14,6 @@ export const Config = {
   isDevelopment: process.env.NODE_ENV === "development",
   isProduction: process.env.NODE_ENV === "production",
   isTest: process.env.NODE_ENV === "test",
-
   // Discord bot
   discord: {
     token: process.env.DISCORD_BOT_TOKEN,
@@ -22,13 +21,29 @@ export const Config = {
     guildId: process.env.GUILD_ID,
     inviteUrl: process.env.DISCORD_INVITE_URL || null,
   },
-
   database: {
     enabled: process.env.DATABASE_ENABLED === "true",
     type: process.env.DATABASE_TYPE || "json",
     jsonPath: process.env.JSON_DB_PATH || "./data",
   },
-
+  rateLimiting: {
+    commands: {
+      amount: 10,
+      interval: 30,
+    },
+    buttons: {
+      amount: 10,
+      interval: 30,
+    },
+    triggers: {
+      amount: 10,
+      interval: 30,
+    },
+    reactions: {
+      amount: 10,
+      interval: 30,
+    },
+  },
   logging: {
     pretty: true,
   },
