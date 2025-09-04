@@ -4,14 +4,21 @@ import {
   Client,
   CommandInteraction,
   Events,
+  Guild,
+  GuildMember,
   Interaction,
+  Message,
 } from "discord.js";
 import { Logger } from "../services/index";
 import path from "path";
 import fs from "fs";
 import { ROOT_DIR } from "../constants";
 import { CustomClient } from "../extensions/custom-client";
-import { CommandHandler } from "../events";
+import {
+  CommandHandler,
+  MessageHandler,
+  VerificationMemberJoinHandler,
+} from "../events";
 
 const logsPath = path.join(ROOT_DIR, "lang", "logs.json");
 const Logs = JSON.parse(fs.readFileSync(logsPath, "utf-8"));
@@ -24,6 +31,8 @@ export class Bot {
     private client: CustomClient,
     private guildId: string,
     private commandHandler: CommandHandler,
+    private verificationMemberJoinHandler: VerificationMemberJoinHandler,
+    private messageHandler: MessageHandler,
   ) {}
 
   public async start(): Promise<void> {
@@ -33,9 +42,13 @@ export class Bot {
 
   private registerListener(): void {
     this.client.once(Events.ClientReady, () => this.onReady());
-    this.client.on(Events.InteractionCreate, (intr: Interaction) => {
-      this.onInteraction(intr);
-    });
+    this.client.on(Events.MessageCreate, (msg: Message) => this.onMessage(msg));
+    // this.client.on(Events.InteractionCreate, (intr: Interaction) => {
+    //   this.onInteraction(intr);
+    // });
+    this.client.on(Events.GuildMemberAdd, (member: GuildMember) =>
+      this.onGuildMemberAdd(member),
+    );
   }
 
   private async login(token: string): Promise<void> {
@@ -44,6 +57,13 @@ export class Bot {
     } catch (error) {
       Logger.error(Logs.error.clientLogin, error);
     }
+  }
+
+  private async onGuildMemberAdd(member: GuildMember): Promise<void> {
+    if (!this.isReady) return;
+    try {
+      await this.verificationMemberJoinHandler.process(member);
+    } catch (error) {}
   }
 
   private async onInteraction(intr: Interaction): Promise<void> {
@@ -66,6 +86,16 @@ export class Bot {
       } catch (error) {
         Logger.error(Logs.error.button, error);
       }
+    }
+  }
+
+  private async onMessage(msg: Message): Promise<void> {
+    if (!this.isReady) return;
+    try {
+      //TODO: add partials
+      await this.messageHandler.process(msg);
+    } catch (error) {
+      Logger.error(Logs.error.message, error);
     }
   }
 
